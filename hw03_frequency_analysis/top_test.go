@@ -79,4 +79,34 @@ func TestTop10(t *testing.T) {
 			require.Equal(t, expected, Top10(text))
 		}
 	})
+
+	t.Run("words from task", func(t *testing.T) {
+		if !taskWithAsteriskIsCompleted {
+			expected := []string{
+				"ногу",  // 2
+				"-",     // 1
+				"Нога",  // 1
+				"Ноги",  // 1
+				"Ногу",  // 1
+				"нога",  // 1
+				"нога,", // 1
+				"ноги",  // 1
+				"ноги.", // 1
+				"ногу,", // 1
+			}
+			require.Equal(t, expected, Top10("нога Нога нога, - ногу ноги ногу ногу, Ногу Ноги ноги."))
+		}
+	})
+
+	t.Run("less than 10 words at the input", func(t *testing.T) {
+		if !taskWithAsteriskIsCompleted {
+			expected := []string{
+				"Hello,", // 1
+				"OTUS!",  // 1
+			}
+			result := Top10("Hello, OTUS!")
+			require.Len(t, result, 2)
+			require.Equal(t, expected, result)
+		}
+	})
 }
