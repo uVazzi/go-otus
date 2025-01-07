@@ -33,9 +33,10 @@ func Top10(inputText string) []string {
 	})
 
 	result := make([]string, 0, 10)
-	for i := 0; i < 10; i++ {
-		if i < len(structWords) {
-			result = append(result, structWords[i].word)
+	for _, item := range structWords {
+		result = append(result, item.word)
+		if len(result) == 10 {
+			break
 		}
 	}
 
