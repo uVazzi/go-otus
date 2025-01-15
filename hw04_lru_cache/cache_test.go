@@ -49,14 +49,79 @@ func TestCache(t *testing.T) {
 		require.Nil(t, val)
 	})
 
-	t.Run("purge logic", func(t *testing.T) {
-		// Write me
+	t.Run("common purge logic", func(t *testing.T) {
+		c := NewCache(3)
+
+		c.Set("aaa", 100)
+		_, ok := c.Get("aaa")
+		require.True(t, ok)
+
+		c.Set("bbb", 200)
+		_, ok = c.Get("bbb")
+		require.True(t, ok)
+
+		c.Set("ccc", 300)
+		_, ok = c.Get("ccc")
+		require.True(t, ok)
+
+		c.Set("ddd", 400)
+		_, ok = c.Get("ddd")
+		require.True(t, ok)
+
+		_, ok = c.Get("aaa")
+		require.False(t, ok)
+	})
+
+	t.Run("complex purge logic", func(t *testing.T) {
+		c := NewCache(3)
+
+		c.Set("aaa", 100) // aaa=100 - first and last
+		value, ok := c.Get("aaa")
+		require.True(t, ok)
+		require.Equal(t, 100, value)
+
+		c.Set("bbb", 200) // bbb=200 - first | aaa=100 - last
+		_, ok = c.Get("bbb")
+		require.True(t, ok)
+
+		c.Set("ccc", 300) // ccc=300 - first | bbb=200 - middle | aaa=100 - last
+		_, ok = c.Get("ccc")
+		require.True(t, ok)
+
+		_, ok = c.Get("aaa") // aaa=100 - first | ccc=300 - middle | bbb=200 - last
+		require.True(t, ok)
+
+		isUpdateValue := c.Set("ccc", 600) // ccc=600 - first | aaa=100 - middle | bbb=200 - last
+		require.True(t, isUpdateValue)
+
+		isUpdateValue = c.Set("bbb", 400) // bbb=400 - first | ccc=600 - middle | aaa=100 - last
+		require.True(t, isUpdateValue)
+
+		_, ok = c.Get("aaa") // aaa=100 - first | bbb=400 - middle | ccc=600 - last
+		require.True(t, ok)
+
+		isUpdateValue = c.Set("ddd", 500) // ddd=500 - first | aaa=100 - middle | bbb=400 - last
+		require.False(t, isUpdateValue)
+
+		value, ok = c.Get("ddd") // ddd=500 - first | aaa=100 - middle | bbb=400 - last
+		require.True(t, ok)
+		require.Equal(t, 500, value)
+
+		value, ok = c.Get("aaa") // aaa=100 - first | ddd=500 - middle | bbb=400 - last
+		require.True(t, ok)
+		require.Equal(t, 100, value)
+
+		value, ok = c.Get("bbb") // bbb=400 - first | aaa=100 - middle | ddd=500 - last
+		require.True(t, ok)
+		require.Equal(t, 400, value)
+
+		value, ok = c.Get("ccc")
+		require.False(t, ok)
+		require.Equal(t, nil, value)
 	})
 }
 
-func TestCacheMultithreading(t *testing.T) {
-	t.Skip() // Remove me if task with asterisk completed.
-
+func TestCacheMultithreading(_ *testing.T) {
 	c := NewCache(10)
 	wg := &sync.WaitGroup{}
 	wg.Add(2)
