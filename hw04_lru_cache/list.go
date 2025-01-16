@@ -79,6 +79,14 @@ func (thisList *list) PushBack(value interface{}) *ListItem {
 }
 
 func (thisList *list) Remove(item *ListItem) {
+	thisList.len--
+
+	if item.Prev == nil && item.Next == nil {
+		thisList.firstItem = nil
+		thisList.lastItem = nil
+		return
+	}
+
 	switch {
 	case item.Prev == nil:
 		item.Next.Prev = nil
@@ -90,8 +98,6 @@ func (thisList *list) Remove(item *ListItem) {
 		item.Prev.Next = item.Next
 		item.Next.Prev = item.Prev
 	}
-
-	thisList.len--
 }
 
 func (thisList *list) MoveToFront(item *ListItem) {

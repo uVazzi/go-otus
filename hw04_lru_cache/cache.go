@@ -37,6 +37,10 @@ func (cache *lruCache) Set(key Key, value interface{}) bool {
 	cache.mutex.Lock()
 	defer cache.mutex.Unlock()
 
+	if cache.capacity == 0 {
+		return false
+	}
+
 	newCacheItem := &cacheItem{key, value}
 
 	if item, ok := cache.items[key]; ok {
