@@ -18,7 +18,7 @@ func ExecutePipeline(in In, done In, stages ...Stage) Out {
 		if stage == nil {
 			continue
 		}
-		out = stage(closeChecker(out, done))
+		out = closeChecker(stage(out), done)
 	}
 
 	return out
