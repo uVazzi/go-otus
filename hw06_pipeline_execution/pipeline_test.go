@@ -93,6 +93,16 @@ func TestPipeline(t *testing.T) {
 		require.Len(t, result, 0)
 		require.Less(t, int64(elapsed), int64(abortDur)+int64(fault))
 	})
+
+	t.Run("empty stages", func(t *testing.T) {
+		result := ExecutePipeline(make(Bi), nil, []Stage{}...)
+		require.Nil(t, result)
+	})
+
+	t.Run("empty in", func(t *testing.T) {
+		result := ExecutePipeline(nil, nil, stages...)
+		require.Nil(t, result)
+	})
 }
 
 func TestAllStageStop(t *testing.T) {
@@ -150,6 +160,5 @@ func TestAllStageStop(t *testing.T) {
 		wg.Wait()
 
 		require.Len(t, result, 0)
-
 	})
 }
