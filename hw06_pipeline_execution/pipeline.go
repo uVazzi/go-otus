@@ -18,10 +18,10 @@ func ExecutePipeline(in In, done In, stages ...Stage) Out {
 		if stage == nil {
 			continue
 		}
-		out = closeChecker(stage(out), done)
+		out = stage(closeChecker(out, done))
 	}
 
-	return out
+	return closeChecker(out, done)
 }
 
 func closeChecker(in In, done In) Out {
