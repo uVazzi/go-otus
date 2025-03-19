@@ -82,6 +82,11 @@ func TestCopy(t *testing.T) {
 		require.Truef(t, errors.Is(err, ErrUnsupportedFile), "actual err - %v", err)
 	})
 
+	t.Run("fromFile and toFile same file", func(t *testing.T) {
+		err := Copy("testdata/input.txt", "testdata/input.txt", 0, 0)
+		require.Truef(t, errors.Is(err, ErrFromToSameFile), "actual err - %v", err)
+	})
+
 	t.Run("success by testdata", func(t *testing.T) {
 		checkCopyFile(t, "testdata/out_offset0_limit0.txt", 0, 0)
 		checkCopyFile(t, "testdata/out_offset0_limit10.txt", 0, 10)

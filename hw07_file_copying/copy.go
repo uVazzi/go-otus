@@ -13,6 +13,7 @@ var (
 	ErrOffsetExceedsFileSize = errors.New("offset exceeds file size")
 	ErrRequiredPath          = errors.New("fromPath and toPath must be specified")
 	ErrNotValidOffsetOrLimit = errors.New("offset and limit must be greater than zero")
+	ErrFromToSameFile        = errors.New("fromFile and toFile same file")
 )
 
 func Copy(fromPath, toPath string, offset, limit int64) error {
@@ -27,8 +28,12 @@ func Copy(fromPath, toPath string, offset, limit int64) error {
 	if err != nil {
 		return err
 	}
-	if limit == 0 {
-		limit = fileInfo.Size()
+	outputFileInfo, err := os.Stat(toPath)
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		return err
+	}
+	if os.SameFile(fileInfo, outputFileInfo) {
+		return ErrFromToSameFile
 	}
 	if offset > fileInfo.Size() {
 		return ErrOffsetExceedsFileSize
@@ -54,6 +59,10 @@ func Copy(fromPath, toPath string, offset, limit int64) error {
 	}
 	defer outputFile.Close()
 
+	if limit == 0 {
+		limit = fileInfo.Size()
+	}
+
 	copySize := fileInfo.Size() - offset
 	if limit < copySize {
 		copySize = limit
@@ -66,6 +75,7 @@ func Copy(fromPath, toPath string, offset, limit int64) error {
 	barReader := bar.NewProxyReader(reader)
 	_, err = io.CopyN(outputFile, barReader, copySize)
 	if err != nil && !errors.Is(err, io.EOF) {
+		os.Remove(toPath)
 		return err
 	}
 
