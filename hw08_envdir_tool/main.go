@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 )
 
 var ErrArgs = errors.New("not enough args")
@@ -25,7 +26,11 @@ func main() {
 
 func GetErrorCodeAndPrintError(err error) int {
 	fmt.Println("Error:", err)
+	var exitErr *exec.ExitError
+
 	switch {
+	case errors.As(err, &exitErr):
+		return exitErr.ExitCode()
 	case errors.Is(err, ErrArgs):
 		return 1
 	case errors.Is(err, ErrReadEnvDir):

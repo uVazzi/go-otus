@@ -17,6 +17,8 @@ func RunCmd(cmd []string, env Environment) (returnCode int) {
 
 	command := exec.Command(cmd[0], cmd[1:]...) //nolint
 	command.Stdout = os.Stdout
+	command.Stdin = os.Stdin
+	command.Stderr = os.Stderr
 
 	for key, envValue := range env {
 		if !envValue.NeedRemove {
