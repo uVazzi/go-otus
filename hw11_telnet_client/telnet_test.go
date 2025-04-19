@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"io"
 	"net"
 	"sync"
@@ -61,5 +62,17 @@ func TestTelnetClient(t *testing.T) {
 		}()
 
 		wg.Wait()
+	})
+}
+
+func TestCheckErrors(t *testing.T) {
+	t.Run("host and port is required", func(t *testing.T) {
+		err := run([]string{"127.0.0.1"}, 10*time.Second)
+		require.Truef(t, errors.Is(err, ErrRequiredHostAndPort), "actual err - %v", err)
+	})
+
+	t.Run("port must be a integer", func(t *testing.T) {
+		err := run([]string{"127.0.0.1", "PORT"}, 10*time.Second)
+		require.Truef(t, errors.Is(err, ErrPortNotInt), "actual err - %v", err)
 	})
 }
