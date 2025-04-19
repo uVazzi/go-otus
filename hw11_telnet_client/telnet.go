@@ -2,6 +2,7 @@ package main
 
 import (
 	"io"
+	"net"
 	"time"
 )
 
@@ -10,12 +11,48 @@ type TelnetClient interface {
 	io.Closer
 	Send() error
 	Receive() error
+	GetAddress() string
+}
+
+type telnetClient struct {
+	address string
+	timeout time.Duration
+	in      io.ReadCloser
+	out     io.Writer
+	conn    net.Conn
 }
 
 func NewTelnetClient(address string, timeout time.Duration, in io.ReadCloser, out io.Writer) TelnetClient {
-	// Place your code here.
+	return &telnetClient{
+		address: address,
+		timeout: timeout,
+		in:      in,
+		out:     out,
+	}
+}
+
+func (client *telnetClient) Connect() (err error) {
+	client.conn, err = net.DialTimeout("tcp", client.address, client.timeout)
+	return
+}
+
+func (client *telnetClient) Close() error {
+	if client.conn != nil {
+		return client.conn.Close()
+	}
 	return nil
 }
 
-// Place your code here.
-// P.S. Author's solution takes no more than 50 lines.
+func (client *telnetClient) Send() error {
+	_, err := io.Copy(client.conn, client.in)
+	return err
+}
+
+func (client *telnetClient) Receive() error {
+	_, err := io.Copy(client.out, client.conn)
+	return err
+}
+
+func (client *telnetClient) GetAddress() string {
+	return client.address
+}
