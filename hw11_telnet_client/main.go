@@ -55,7 +55,7 @@ func run(args []string, timeout time.Duration) error {
 	}
 	defer client.Close()
 
-	fmt.Println("...Connected to ", client.GetAddress())
+	fmt.Fprintf(os.Stderr, "...Connected to %v\n", client.GetAddress())
 
 	done := make(chan struct{})
 
@@ -77,9 +77,9 @@ func run(args []string, timeout time.Duration) error {
 
 	select {
 	case <-ctx.Done():
-		fmt.Println("...Connection was closed by peer")
+		fmt.Fprintf(os.Stderr, "...Connection was closed by peer")
 	case <-done:
-		fmt.Println("...EOF")
+		fmt.Fprintf(os.Stderr, "...EOF")
 	}
 
 	return nil
