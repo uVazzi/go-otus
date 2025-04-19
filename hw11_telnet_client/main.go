@@ -47,7 +47,8 @@ func run(args []string, timeout time.Duration) error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	client := NewTelnetClient(net.JoinHostPort(args[0], args[1]), timeout, os.Stdin, os.Stdout)
+	address := net.JoinHostPort(args[0], args[1])
+	client := NewTelnetClient(address, timeout, os.Stdin, os.Stdout)
 
 	err = client.Connect()
 	if err != nil {
@@ -55,7 +56,7 @@ func run(args []string, timeout time.Duration) error {
 	}
 	defer client.Close()
 
-	fmt.Fprintf(os.Stderr, "...Connected to %v\n", client.GetAddress())
+	fmt.Fprintf(os.Stderr, "...Connected to %v\n", address)
 
 	done := make(chan struct{})
 

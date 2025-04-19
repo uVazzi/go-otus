@@ -11,7 +11,6 @@ type TelnetClient interface {
 	io.Closer
 	Send() error
 	Receive() error
-	GetAddress() string
 }
 
 type telnetClient struct {
@@ -51,8 +50,4 @@ func (client *telnetClient) Send() error {
 func (client *telnetClient) Receive() error {
 	_, err := io.Copy(client.out, client.conn)
 	return err
-}
-
-func (client *telnetClient) GetAddress() string {
-	return client.address
 }
