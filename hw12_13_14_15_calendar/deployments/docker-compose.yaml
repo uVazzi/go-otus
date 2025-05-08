@@ -1,1 +1,16 @@
-version: "3"
+services:
+  db:
+    image: postgres:15
+    container_name: calendar_db
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: otus
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_DB: calendar
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
