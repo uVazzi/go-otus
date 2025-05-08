@@ -2,39 +2,53 @@ package main
 
 import (
 	"context"
-	"flag"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
-	"github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/app"
-	"github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/logger"
-	internalhttp "github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/server/http"
-	memorystorage "github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/storage/memory"
+	"github.com/spf13/cobra"
+	"github.com/uVazzi/go-otus/hw12_13_14_15_calendar/cmd/calendar/console"
+	"github.com/uVazzi/go-otus/hw12_13_14_15_calendar/internal/app/provider"
+	internalhttp "github.com/uVazzi/go-otus/hw12_13_14_15_calendar/internal/infra/http"
 )
 
-var configFile string
+var commands = &cobra.Command{
+	Use: "calendar",
+	Long: `The "Calendar" service is a maximally simplified service
+for storing calendar events and sending notifications`,
+	Run: runMain,
+}
 
 func init() {
-	flag.StringVar(&configFile, "config", "/etc/calendar/config.toml", "Path to configuration file")
+	var configFilePath string
+	commands.PersistentFlags().StringVar(&configFilePath, "config", "configs/config.yml", "Path to configuration file")
+
+	// Позже cobra сама сделает ParseFlags при Execute, но нам нужен config для инициализации DI провайдера
+	_ = commands.ParseFlags(os.Args[1:])
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	provider.ProvideContainer(ctx, configFilePath)
 }
 
 func main() {
-	flag.Parse()
+	defer provider.CalendarContainer.CloseDB()
 
-	if flag.Arg(0) == "version" {
-		printVersion()
-		return
+	commands.AddCommand(console.GetMigrateCommands())
+	commands.AddCommand(console.GetVersionCommand())
+
+	err := commands.Execute()
+	if err != nil {
+		provider.CalendarContainer.GetLogger().Error(context.TODO(), "Error execute: "+err.Error())
+		os.Exit(1) //nolint:gocritic
 	}
+}
 
-	config := NewConfig()
-	logg := logger.New(config.Logger.Level)
-
-	storage := memorystorage.New()
-	calendar := app.New(logg, storage)
-
-	server := internalhttp.NewServer(logg, calendar)
+func runMain(_ *cobra.Command, _ []string) {
+	logg := provider.CalendarContainer.GetLogger()
+	server := internalhttp.NewServer()
 
 	ctx, cancel := signal.NotifyContext(context.Background(),
 		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
@@ -47,14 +61,14 @@ func main() {
 		defer cancel()
 
 		if err := server.Stop(ctx); err != nil {
-			logg.Error("failed to stop http server: " + err.Error())
+			logg.Error(ctx, "failed to stop http server: "+err.Error())
 		}
 	}()
 
-	logg.Info("calendar is running...")
+	logg.Info(context.TODO(), "calendar is running...")
 
 	if err := server.Start(ctx); err != nil {
-		logg.Error("failed to start http server: " + err.Error())
+		logg.Error(ctx, "failed to start http server: "+err.Error())
 		cancel()
 		os.Exit(1) //nolint:gocritic
 	}

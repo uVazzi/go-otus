@@ -1,0 +1,14 @@
+app:
+  useMemoryStorage: true
+http:
+  host: "localhost"
+  port: "8080"
+logger:
+  logLevel: "INFO"
+  disableDebugLog: true
+db:
+  host: "localhost"
+  port: "5432"
+  username: "otus"
+  password: "123456"
+  database: "calendar"
